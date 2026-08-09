@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SwiftCart — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bolt-50:#EAF3FF;--bolt-100:#D3E7FF;--bolt-300:#86BBFF;--bolt-500:#0B63F6;--bolt-600:#0A52C7;--bolt-700:#08409B;--bolt-900:#0B2A5E;
+    --urgent-50:#FFF7E6;--urgent-400:#FFB020;--urgent-500:#F59E0B;--urgent-600:#B45309;
+    --live-50:#E6F6F3;--live-400:#34D399;--live-500:#0D9488;--live-600:#0F766E;
+    --amber-50:#FFF7E6;--amber-500:#F59E0B;--amber-600:#B45309;
+    --slate-50:#F7F8FA;
+    --surface:#F7F8FA;--surface-raised:#FFFFFF;
+    --ink:#14181F;--ink-soft:#5C6472;--line:#E4E7EC;
+    --sidebar:#0B1E42;--sidebar-line:#1C3564;
+    --radius:8px;
+    --font-display:'Inter',sans-serif;--font-mono:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4,.display{font-family:var(--font-display);letter-spacing:-0.02em}
+  .mono,.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit}
+  ::selection{background:var(--bolt-300)}
+
+  /* ---------- Layout ---------- */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  @media(max-width:900px){.app{grid-template-columns:1fr}}
+  .app-content{min-width:0}
+  body{overflow-x:hidden}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{background:var(--sidebar);color:#fff;padding:22px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  @media(max-width:900px){.sidebar{position:fixed;left:0;top:0;width:240px;z-index:70;transform:translateX(-100%);transition:.2s;box-shadow:20px 0 40px rgba(0,0,0,.25)}
+    .sidebar.open{transform:translateX(0)}}
+  .side-logo{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;padding:6px 10px 22px;display:flex;align-items:center;gap:8px}
+  .side-logo .tag{background:var(--bolt-500);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.03em}
+  .side-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .side-link{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:6px;border-left:3px solid transparent;font-size:13.5px;font-weight:500;color:#8891AD;border-top:none;border-right:none;border-bottom:none;background:none;width:100%;text-align:left}
+  .side-link svg{flex:none;opacity:.85}
+  .side-link:hover{background:rgba(255,255,255,.05);color:#fff}
+  .side-link.active{background:rgba(37,66,184,.18);color:#fff;border-left-color:var(--bolt-300)}
+  .side-link.active svg{opacity:1}
+  .side-foot{border-top:1px solid var(--sidebar-line);padding-top:14px;margin-top:10px}
+  .side-admin{display:flex;align-items:center;gap:10px;padding:8px 10px}
+  .side-avatar{width:32px;height:32px;border-radius:6px;background:var(--bolt-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+  .side-admin .name{font-size:13px;font-weight:600;color:#fff}
+  .side-admin .role{font-size:11px;color:#7C97C9}
+
+  /* ---------- Topbar ---------- */
+  .topbar{position:sticky;top:0;z-index:75;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 28px;display:flex;align-items:center;gap:14px}
+  .menu-toggle{display:none;border:none;background:none;padding:6px;border-radius:8px;color:#3D4451}
+  @media(max-width:900px){.menu-toggle{display:flex}}
+  @media(max-width:480px){.topbar{padding:12px 14px;gap:10px}}
+  .page-title{font-family:var(--font-display);font-size:20px;font-weight:700;margin:0}
+  @media(max-width:480px){.page-title{font-size:17px}}
+  .page-sub{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+  @media(max-width:480px){.page-sub{display:none}}
+  .topbar-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+  @media(max-width:480px){.topbar-actions{gap:8px}.topbar-actions .btn-primary{padding:9px 12px;font-size:12.5px}}
+  .top-search{position:relative}
+  .top-search input{padding:9px 14px 9px 36px;border-radius:6px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;outline:none;width:220px;transition:.15s}
+  .top-search input:focus{border-color:var(--bolt-500);background:#fff;width:260px}
+  .top-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94A3B8}
+  @media(max-width:640px){.top-search{display:none}}
+  .btn-primary{background:var(--bolt-500);color:#fff;border:none;padding:10px 18px;border-radius:6px;font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap}
+  .btn-primary:hover{background:var(--bolt-600)}
+  .btn-ghost{border:1px solid var(--line);background:#fff;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13.5px;color:var(--ink)}
+  .btn-ghost:hover{background:var(--surface)}
+
+  .main{padding:26px 28px 60px}
+  @media(max-width:480px){.main{padding:16px 14px 40px}}
+  .view{display:none}
+  .view.active{display:block}
+
+  /* ---------- Stat cards ---------- */
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+  @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:420px){.stats{grid-template-columns:1fr;gap:10px}}
+  @media(max-width:420px){.stat-card .value{font-size:23px}}
+  .stat-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent,var(--bolt-500));border-radius:8px;padding:16px 18px 18px;position:relative;overflow:hidden}
+  @media(max-width:420px){.stat-card{padding:13px 14px 15px}}
+  .stat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .stat-icon{width:32px;height:32px;border-radius:6px;background:var(--accent,var(--bolt-500));color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .stat-icon svg{display:block}
+  .stat-card .label{font-size:12.5px;color:var(--ink-soft);font-weight:500;position:relative}
+  .stat-card .value{font-family:var(--font-display);font-size:27px;font-weight:700;margin-top:6px;position:relative;font-variant-numeric:tabular-nums}
+  .stat-card .delta{font-size:11.5px;font-weight:600;margin-top:7px;display:flex;align-items:center;gap:4px;position:relative}
+  .delta.up{color:var(--live-600)}
+  .delta.warn{color:var(--amber-600)}
+  .delta.flat{color:var(--ink-soft)}
+
+  /* ---------- Panel ---------- */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:22px}
+  .panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  @media(max-width:420px){.panel-head{padding:14px}}
+  .panel-head h2{font-size:16px;margin:0;font-weight:700}
+  .cat-filters{display:flex;gap:8px;overflow-x:auto;flex:1}
+  .cat-pill{flex:none;padding:7px 14px;border-radius:6px;border:1px solid var(--line);font-size:12.5px;font-weight:500;background:#fff;white-space:nowrap;color:#3D4451}
+  .cat-pill.active{background:var(--bolt-500);border-color:var(--bolt-500);color:#fff}
+  .sort-select{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fff;color:#3D4451}
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:820px}
+  thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;padding:12px 20px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:12px 20px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+  tbody tr:hover{background:var(--surface)}
+  tbody tr:last-child td{border-bottom:none}
+  .prod-cell{display:flex;align-items:center;gap:12px}
+  .prod-thumb{width:42px;height:42px;border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;overflow:hidden}
+  .prod-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .prod-title{font-weight:600;font-size:13.5px}
+  .prod-id{font-size:11px;color:var(--ink-soft);font-family:var(--font-mono)}
+  .cat-tag{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:4px;background:var(--bolt-50);color:var(--bolt-700);white-space:nowrap}
+  .price-cell b{font-family:var(--font-mono);font-size:14px}
+  .price-old{font-size:11.5px;color:#94A3B8;text-decoration:line-through;margin-left:5px;font-family:var(--font-mono)}
+  .rating-cell{display:flex;align-items:center;gap:4px;color:#B45309;font-weight:600;font-size:13px}
+  .stock-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:4px;border:1px solid transparent}
+  .stock-pill.in{background:var(--live-50);color:var(--live-600);border-color:#CFE0D1}
+  .stock-pill.low{background:var(--amber-50);color:var(--amber-600);border-color:#E7D6B5}
+  .stock-pill.out{background:var(--urgent-50);color:var(--urgent-600);border-color:#E8C6B2}
+  .stock-pill .dot{width:6px;height:6px;border-radius:999px;background:currentColor}
+  .flash-toggle{position:relative;width:38px;height:22px;border-radius:999px;background:var(--line);border:none;transition:.15s;flex:none}
+  .flash-toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:999px;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .flash-toggle.on{background:var(--urgent-500)}
+  .flash-toggle.on::after{transform:translateX(16px)}
+  .row-actions{display:flex;gap:4px;justify-content:flex-end}
+  .icon-action{border:none;background:none;padding:7px;border-radius:6px;color:var(--ink-soft);display:flex}
+  .icon-action:hover{background:var(--surface);color:var(--bolt-600)}
+  .icon-action.danger:hover{background:var(--urgent-50);color:var(--urgent-600)}
+  .stock-input{width:56px;padding:5px 6px;border-radius:6px;border:1px solid var(--line);font-size:12.5px;text-align:center;font-family:var(--font-mono)}
+  .stock-input:focus{outline:none;border-color:var(--bolt-500)}
+  .stock-toggle-btn{border:1px solid var(--line);background:#fff;padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;color:var(--ink-soft);white-space:nowrap}
+  .stock-toggle-btn:hover{background:var(--surface)}
+  .empty-row{text-align:center;padding:60px 20px;color:var(--ink-soft)}
+  .empty-row .e{font-size:32px;margin-bottom:10px}
+  .status-select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#fff}
+  .status-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:4px;white-space:nowrap;border:1px solid transparent}
+  .status-pill.st-placed{background:var(--amber-50);color:var(--amber-600);border-color:#E7D6B5}
+  .status-pill.st-packing{background:var(--bolt-50);color:var(--bolt-700);border-color:var(--bolt-300)}
+  .status-pill.st-outfordelivery{background:var(--bolt-100);color:var(--bolt-900);border-color:var(--bolt-300)}
+  .status-pill.st-delivered{background:var(--live-50);color:var(--live-600);border-color:#CFE0D1}
+  .status-pill.st-cancelled{background:var(--surface);color:var(--ink-soft);border-color:var(--line)}
+  .avatar-chip{width:32px;height:32px;border-radius:6px;background:var(--bolt-100);color:var(--bolt-700);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+  .coupon-code-cell{font-family:var(--font-mono);font-weight:700;font-size:13.5px;color:var(--bolt-700);background:var(--bolt-50);padding:4px 10px;border-radius:4px;display:inline-block}
+  .active-toggle{position:relative;width:38px;height:22px;border-radius:999px;background:var(--line);border:none;transition:.15s;flex:none}
+  .active-toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:999px;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .active-toggle.on{background:var(--live-500)}
+  .active-toggle.on::after{transform:translateX(16px)}
+
+  /* ---------- Payment badge ---------- */
+  .pay-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:4px;white-space:nowrap;border:1px solid transparent}
+  .pay-badge.paid{background:var(--live-50);color:var(--live-600);border-color:#CFE0D1}
+  .pay-badge.due{background:var(--urgent-50);color:var(--urgent-600);border-color:#E8C6B2}
+
+  /* ---------- Sub-tabs (Board / Table) ---------- */
+  .subtabs{display:flex;background:var(--surface);border-radius:6px;padding:3px;gap:2px;border:1px solid var(--line)}
+  .subtab{border:none;background:none;padding:8px 16px;border-radius:4px;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+  .subtab.active{background:#fff;color:var(--bolt-700);box-shadow:0 1px 4px rgba(15,23,42,.08)}
+
+  /* ---------- Kanban board ---------- */
+  .kanban{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:16px;overflow-x:auto;padding-bottom:6px}
+  @media(max-width:1100px){.kanban{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:82%}}
+  @media(max-width:560px){.kanban{grid-auto-columns:88%}}
+  .kcol{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;min-width:0}
+  .kcol-head{padding:14px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+  .kcol-dot{width:8px;height:8px;border-radius:999px;flex:none}
+  .kcol-title{font-size:13px;font-weight:700}
+  .kcol-count{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ink-soft);background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+  .kcol-body{padding:10px;display:flex;flex-direction:column;gap:10px;max-height:560px;overflow-y:auto}
+  .kcard{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px}
+  .kcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .kcard-id{font-weight:700;font-size:13px}
+  .kcard-cust{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .kcard-cust .name{font-size:12.5px;font-weight:600}
+  .kcard-meta{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);margin-bottom:10px}
+  .kcard-rider{margin-bottom:10px}
+  .kcard-rider select{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;background:#fff;color:var(--ink)}
+  .kcard-actions{display:flex;gap:6px}
+  .kcard-advance{flex:1;background:var(--bolt-500);color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;font-weight:600}
+  .kcard-advance:hover{background:var(--bolt-600)}
+  .kcard-cancel{border:1px solid var(--line);background:#fff;padding:8px;border-radius:6px;color:var(--ink-soft);display:flex;align-items:center;justify-content:center}
+  .kcard-cancel:hover{background:var(--urgent-50);color:var(--urgent-600);border-color:var(--urgent-50)}
+  .kcol-empty{padding:30px 14px;text-align:center;font-size:12px;color:var(--ink-soft)}
+
+  /* ---------- Alert banner ---------- */
+  .alert-banner{display:flex;align-items:flex-start;gap:10px;background:var(--amber-50);color:var(--amber-600);border-radius:8px;padding:12px 14px;font-size:12.5px;margin-bottom:16px;line-height:1.5}
+  .alert-banner b{font-weight:700}
+  .alert-banner svg{flex:none;margin-top:1px}
+
+  /* ---------- Riders ---------- */
+  .rider-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:20px}
+  .rider-card{border:1px solid var(--line);border-radius:6px;padding:16px}
+  .rider-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .rider-name{font-weight:700;font-size:14px}
+  .rider-phone{font-size:11.5px;color:var(--ink-soft)}
+  .rider-stats{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .rider-load{font-size:12px;color:var(--ink-soft)}
+  .rider-load b{color:var(--ink)}
+  .rstatus-select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:11.5px;font-weight:600;background:#fff}
+
+  /* ---------- Settings form ---------- */
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px}
+  .settings-grid .full{grid-column:1/-1}
+  @media(max-width:640px){.settings-grid{grid-template-columns:1fr}}
+  .flabel{font-size:12px;font-weight:600;color:#3D4451;margin-bottom:5px;display:block}
+  .fhint{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
+  .finput{width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--line);font-size:13.5px;outline:none;background:#fff}
+  .finput:focus{border-color:var(--bolt-500)}
+
+  .settings-foot{padding:0 22px 22px;display:flex;justify-content:flex-end;gap:10px}
+  .settings-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding-top:14px;margin-top:2px;border-top:1px solid var(--line)}
+  .settings-grid .settings-section-title:first-child{border-top:none;padding-top:0;margin-top:0}
+
+  /* ---------- Overview ---------- */
+  .overview-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:22px}
+  @media(min-width:900px){.overview-grid{grid-template-columns:1fr 1fr}}
+  .ov-panel{margin-bottom:0}
+  .ov-panel-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .ov-panel-head h2{font-size:14.5px;margin:0;font-weight:700;flex:1}
+  .ov-link{font-size:12px;font-weight:600;color:var(--bolt-600);border:none;background:none;padding:4px 2px;white-space:nowrap}
+  .ov-link:hover{text-decoration:underline}
+  .ov-list{padding:6px 8px}
+  .ov-row{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:6px}
+  .ov-row:hover{background:var(--surface)}
+  .ov-row-main{flex:1;min-width:0}
+  .ov-row-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ov-row-sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+  .ov-empty{text-align:center;padding:26px 14px;color:var(--ink-soft);font-size:12.5px}
+  .ov-empty .e{font-size:26px;margin-bottom:8px}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--line);border-radius:8px}
+  .toggle-row .t{font-size:13px;font-weight:600}
+  .toggle-row .d{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:78;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.show{display:flex}
+  .modal{background:#fff;border-radius:12px;width:100%;max-width:460px;padding:26px;position:relative;animation:pop .16s ease-out;max-height:90vh;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+  @media(max-width:480px){.modal{padding:20px;border-radius:12px}}
+  .modal::-webkit-scrollbar{display:none}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-close{position:absolute;top:16px;right:16px;border:none;background:none;color:#94A3B8;padding:6px;border-radius:6px}
+  .modal-close:hover{background:var(--surface)}
+  .modal h2{font-size:19px;margin:0 0 4px}
+  .modal .sub{font-size:13px;color:var(--ink-soft);margin-bottom:20px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+  .form-grid .full{grid-column:1/-1}
+  @media(max-width:420px){.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}}
+  .emoji-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .emoji-choice{width:36px;height:36px;border-radius:6px;border:1.5px solid var(--line);background:#fff;font-size:17px;display:flex;align-items:center;justify-content:center}
+  .emoji-choice.active{border-color:var(--bolt-500);background:var(--bolt-50)}
+  .modal-actions{display:flex;gap:10px;margin-top:20px}
+  .modal-actions button{flex:1;padding:11px;border-radius:6px;font-weight:600;font-size:13.5px}
+  .form-error{background:var(--urgent-50);color:var(--urgent-600);font-size:12.5px;padding:8px 10px;border-radius:8px;margin-bottom:10px;display:none}
+  .form-error.show{display:block}
+
+  /* delete confirm */
+  .confirm-modal{max-width:360px;text-align:center}
+  .confirm-icon{width:52px;height:52px;border-radius:8px;background:var(--urgent-50);color:var(--urgent-600);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .confirm-modal h2{font-size:17px}
+  .confirm-modal p{font-size:13.5px;color:var(--ink-soft);margin-bottom:22px}
+
+  /* ---------- Toast ---------- */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:90;display:flex;align-items:center;gap:8px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .sidebar-scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:none}
+  .sidebar-scrim.show{display:block}
+
+  /* ---------- Auth screen ---------- */
+  .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--surface)}
+  .auth-card{background:#fff;border:1px solid var(--line);border-radius:12px;width:100%;max-width:400px;padding:34px 30px 28px;box-shadow:0 2px 10px rgba(15,23,42,.05)}
+  .auth-logo{text-align:center;font-weight:700;font-size:22px;margin-bottom:6px;letter-spacing:-0.02em}
+  .auth-logo span.tag{background:var(--bolt-500);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.04em;margin-left:6px;vertical-align:middle}
+  .auth-sub{text-align:center;font-size:13px;color:var(--ink-soft);margin-bottom:22px}
+  .auth-tabs{display:flex;background:var(--surface);border-radius:6px;padding:3px;margin-bottom:22px;border:1px solid var(--line)}
+  .auth-tab{flex:1;border:none;background:none;padding:9px;border-radius:4px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+  .auth-tab.active{background:#fff;color:var(--bolt-700);box-shadow:0 1px 4px rgba(15,23,42,.08)}
+  .afield{position:relative;margin-bottom:12px}
+  .afield svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#94A3B8}
+  .afield input{width:100%;padding:11px 12px 11px 38px;border-radius:6px;border:1px solid var(--line);font-size:14px;outline:none;background:#fff}
+  .afield input:focus{border-color:var(--bolt-500)}
+  .auth-error{background:var(--urgent-50);color:var(--urgent-600);font-size:12.5px;padding:9px 11px;border-radius:8px;margin-bottom:12px;display:none}
+  .auth-error.show{display:block}
+  .auth-submit{width:100%;background:var(--bolt-500);color:#fff;border:none;padding:12px;border-radius:6px;font-weight:600;font-size:14.5px}
+  .auth-submit:hover{background:var(--bolt-600)}
+  .auth-fine{text-align:center;font-size:11.5px;color:#94A3B8;margin-top:18px}
+</style>
+
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">Swift<span style="color:var(--bolt-600)">Cart</span><span class="tag">ADMIN</span></div>
+    <div class="auth-sub" id="authSub">Sign in to manage your store</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Sign in</button>
+      <button class="auth-tab" id="tabSignup">Create account</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <form id="authForm">
+      <div class="afield" id="nameFieldWrap" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+        <input id="authName" placeholder="Full name" />
+      </div>
+      <div class="afield">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+        <input id="authEmail" type="email" placeholder="Email address" />
+      </div>
+      <div class="afield">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input id="authPassword" type="password" placeholder="Password" />
+      </div>
+      <div class="afield" id="confirmFieldWrap" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input id="authConfirm" type="password" placeholder="Confirm password" />
+      </div>
+      <button type="button" class="auth-submit" id="authSubmit">Sign in</button>
+    </form>
+    <div class="auth-fine">Admin access only · SwiftCart internal tool</div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-logo">Swift<span style="color:#A9C3F0">Cart</span><span class="tag">ADMIN</span></div>
+    <nav class="side-nav">
+      <button class="side-link active" data-view="overview">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Overview
+      </button>
+      <button class="side-link" data-view="products">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.5 4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.27 6.96 8.73 5.04 8.73-5.04"/><path d="M12 22.08V12"/></svg>
+        Products
+      </button>
+      <button class="side-link" data-view="orders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+        Orders
+      </button>
+      <button class="side-link" data-view="riders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+        Riders
+      </button>
+      <button class="side-link" data-view="customers">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
+      </button>
+      <button class="side-link" data-view="coupons">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 6v1.5"/><path d="M13 16.5V18"/><path d="M13 11v2"/></svg>
+        Coupons
+      </button>
+      <button class="side-link" data-view="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        Settings
+      </button>
+    </nav>
+    <div class="side-foot">
+      <div class="side-admin">
+        <div class="side-avatar" id="sideAvatar">A</div>
+        <div>
+          <div class="name" id="sideName">Admin</div>
+          <div class="role" id="sideRole">Store manager</div>
+        </div>
+      </div>
+      <button class="side-link" id="signOutBtn" style="margin-top:4px;color:var(--urgent-400)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Sign out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+  <!-- ================= MAIN ================= -->
+  <div class="app-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+      <div>
+        <h1 class="page-title" id="pageTitle">Products</h1>
+        <div class="page-sub" id="pageSub">Manage your live catalog</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="top-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" placeholder="Search products…" />
+        </div>
+        <button class="btn-primary" id="addProductBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add product
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- ================= VIEW: OVERVIEW ================= -->
+      <section class="view active" id="view-overview">
+        <div class="stats">
+          <div class="stat-card" style="--accent:var(--live-600)">
+            <div class="stat-top"><div class="label">Today's revenue</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg></div></div>
+            <div class="value" id="ovRevenue">₹0</div>
+            <div class="delta flat">from orders placed today</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--bolt-600)">
+            <div class="stat-top"><div class="label">Orders today</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div></div>
+            <div class="value" id="ovOrders">0</div>
+            <div class="delta flat">placed since midnight</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--bolt-900)">
+            <div class="stat-top"><div class="label">Active deliveries</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="12" rx="2"/><path d="M16 10h3.5a1 1 0 0 1 .9.55L22 14v4a1 1 0 0 1-1 1h-1"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div></div>
+            <div class="value" id="ovActiveDeliveries">0</div>
+            <div class="delta flat">currently out for delivery</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--amber-600)">
+            <div class="stat-top"><div class="label">Low-stock items</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div></div>
+            <div class="value" id="ovLowStock">0</div>
+            <div class="delta warn" id="ovLowStockDelta">need restocking</div>
+          </div>
+        </div>
+
+        <div class="overview-grid">
+          <div class="panel ov-panel">
+            <div class="ov-panel-head">
+              <h2>Orders needing attention</h2>
+              <button type="button" class="ov-link" data-goto="orders">View orders →</button>
+            </div>
+            <div class="ov-list" id="ovAttentionList"></div>
+          </div>
+          <div class="panel ov-panel">
+            <div class="ov-panel-head">
+              <h2>Low stock</h2>
+              <button type="button" class="ov-link" data-goto="products">View catalog →</button>
+            </div>
+            <div class="ov-list" id="ovLowStockList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2 style="flex:1">Recent orders</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ovRecentBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: PRODUCTS ================= -->
+      <section class="view" id="view-products">
+        <div class="stats">
+          <div class="stat-card" style="--accent:var(--bolt-600)">
+              <div class="stat-top"><div class="label">Total products</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.9 8.6 12 3 3.1 8.6"/><path d="M3 8.6v6.8L12 21l9-5.6V8.6"/></svg></div></div>
+            <div class="value" id="statTotal">0</div>
+            <div class="delta flat">across 5 categories</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--urgent-600)">
+              <div class="stat-top"><div class="label">Out of stock</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div></div>
+            <div class="value" id="statOOS">0</div>
+            <div class="delta warn" id="statOOSDelta">needs restocking</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--amber-600)">
+              <div class="stat-top"><div class="label">On flash sale</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div></div>
+            <div class="value" id="statFlash">0</div>
+            <div class="delta up" id="statFlashDelta">live right now</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--live-600)">
+              <div class="stat-top"><div class="label">Catalog value</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg></div></div>
+            <div class="value" id="statValue">₹0</div>
+            <div class="delta flat">sum of stock × price</div>
+          </div>
+        </div>
+
+        <div id="lowStockAlert"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="cat-filters" id="catFilters"></div>
+            <select class="sort-select" id="sortSelect">
+              <option value="default">Sort: Default</option>
+              <option value="price-asc">Price: Low to high</option>
+              <option value="price-desc">Price: High to low</option>
+              <option value="stock-asc">Stock: Low to high</option>
+              <option value="rating-desc">Rating: High to low</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Rating</th>
+                  <th>Flash sale</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: ORDERS ================= -->
+      <section class="view" id="view-orders">
+        <div class="stats">
+          <div class="stat-card" style="--accent:var(--bolt-600)">
+              <div class="stat-top"><div class="label">Live orders</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div></div>
+            <div class="value" id="statLiveOrders">0</div>
+            <div class="delta flat">excluding delivered &amp; cancelled</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--urgent-600)">
+              <div class="stat-top"><div class="label">Out for delivery</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="12" rx="2"/><path d="M16 10h3.5a1 1 0 0 1 .9.55L22 14v4a1 1 0 0 1-1 1h-1"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div></div>
+            <div class="value" id="statOutForDelivery">0</div>
+            <div class="delta warn">on the road right now</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--amber-600)">
+              <div class="stat-top"><div class="label">Avg. delivery time</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+            <div class="value" id="statAvgEta">—</div>
+            <div class="delta flat">across delivered orders</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--live-600)">
+              <div class="stat-top"><div class="label">Cash due (COD)</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div></div>
+            <div class="value" id="statCodDue">₹0</div>
+            <div class="delta flat">to be collected on delivery</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="subtabs" id="orderSubtabs">
+              <button class="subtab active" data-subtab="board">Live board</button>
+              <button class="subtab" data-subtab="table">All orders</button>
+            </div>
+            <div class="cat-filters" id="orderFilters" style="display:none"></div>
+          </div>
+
+          <div id="orderBoardWrap" style="padding:18px">
+            <div class="kanban" id="kanbanBoard"></div>
+          </div>
+
+          <div class="table-wrap" id="orderTableWrap" style="display:none">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Rider</th>
+                  <th>Placed</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: RIDERS ================= -->
+      <section class="view" id="view-riders">
+        <div class="stats">
+          <div class="stat-card" style="--accent:var(--live-600)">
+              <div class="stat-top"><div class="label">Available riders</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+            <div class="value" id="statRidersAvail">0</div>
+            <div class="delta flat">ready to pick up an order</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--bolt-600)">
+              <div class="stat-top"><div class="label">On delivery</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="12" rx="2"/><path d="M16 10h3.5a1 1 0 0 1 .9.55L22 14v4a1 1 0 0 1-1 1h-1"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div></div>
+            <div class="value" id="statRidersOnDelivery">0</div>
+            <div class="delta flat">currently out with an order</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--amber-600)">
+              <div class="stat-top"><div class="label">Avg. delivery time</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+            <div class="value" id="statAvgEta2">—</div>
+            <div class="delta flat">fleet-wide average</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--bolt-900)">
+              <div class="stat-top"><div class="label">Fleet size</div><div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 3.13a4 4 0 0 1 0 7.75"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div></div>
+            <div class="value" id="statRidersTotal">0</div>
+            <div class="delta flat">delivery partners on roster</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2 style="flex:1">Delivery fleet</h2>
+          </div>
+          <div class="rider-grid" id="riderGrid"></div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: CUSTOMERS ================= -->
+      <section class="view" id="view-customers">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>All customers</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Contact</th>
+                  <th>Orders</th>
+                  <th>Total spent</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: COUPONS ================= -->
+      <section class="view" id="view-coupons">
+        <div class="panel">
+          <div class="panel-head">
+            <h2 style="flex:1">Active coupons</h2>
+            <button class="btn-primary" id="addCouponBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Add coupon
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount</th>
+                  <th>Minimum spend</th>
+                  <th>Enabled</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="couponsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: SETTINGS ================= -->
+      <section class="view" id="view-settings">
+        <div class="panel">
+          <div class="panel-head"><h2>Store details</h2></div>
+          <div class="settings-grid">
+            <div class="full settings-section-title">Store</div>
+            <div>
+              <label class="flabel">Store name</label>
+              <input class="finput" id="setStoreName" />
+            </div>
+            <div>
+              <label class="flabel">Support email</label>
+              <input class="finput" id="setEmail" />
+            </div>
+
+            <div class="full settings-section-title">Delivery</div>
+            <div>
+              <label class="flabel">Delivery fee (₹)</label>
+              <input class="finput" id="setDeliveryFee" type="number" min="0" />
+            </div>
+            <div>
+              <label class="flabel">Free delivery above (₹)</label>
+              <input class="finput" id="setFreeThreshold" type="number" min="0" />
+            </div>
+
+            <div class="full settings-section-title">Inventory</div>
+            <div>
+              <label class="flabel">Low stock threshold (units)</label>
+              <input class="finput" id="setLowStock" type="number" min="0" />
+              <div class="fhint">Products at or below this count show a "Low stock" tag in Products.</div>
+            </div>
+
+            <div class="full settings-section-title">Store availability</div>
+            <div class="full">
+              <div class="toggle-row">
+                <div>
+                  <div class="t">Maintenance mode</div>
+                  <div class="d">Temporarily hide the storefront from shoppers</div>
+                </div>
+                <button type="button" class="flash-toggle" id="setMaintenanceToggle"></button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-foot">
+            <button class="btn-primary" id="saveSettingsBtn" style="justify-content:center">Save settings</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= ADD/EDIT PRODUCT MODAL ================= -->
+<div class="modal-overlay" id="productOverlay">
+  <div class="modal">
+    <button class="modal-close" id="productClose" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 id="productModalTitle">Add product</h2>
+    <div class="sub" id="productModalSub">Fill in the details below to add it to the catalog.</div>
+    <div class="form-error" id="productFormError"></div>
+    <form id="productForm">
+      <div class="form-grid">
+        <div class="full">
+          <label class="flabel">Title</label>
+          <input class="finput" id="fTitle" placeholder="e.g. Wireless ANC Headphones" />
+        </div>
+        <div class="full">
+          <label class="flabel">Emoji icon</label>
+          <input class="finput" id="fEmoji" placeholder="🎧" maxlength="4" />
+          <div class="emoji-row" id="emojiRow"></div>
+        </div>
+        <div>
+          <label class="flabel">Category</label>
+          <select class="finput" id="fCat"></select>
+        </div>
+        <div>
+          <label class="flabel">ETA</label>
+          <input class="finput" id="fEta" placeholder="e.g. 14 min" />
+        </div>
+        <div>
+          <label class="flabel">Price (₹)</label>
+          <input class="finput" id="fPrice" type="number" min="0" placeholder="2499" />
+        </div>
+        <div>
+          <label class="flabel">Old price (₹, optional)</label>
+          <input class="finput" id="fOld" type="number" min="0" placeholder="3999" />
+        </div>
+        <div>
+          <label class="flabel">Rating</label>
+          <input class="finput" id="fRating" type="number" min="0" max="5" step="0.1" placeholder="4.6" />
+        </div>
+        <div>
+          <label class="flabel">Stock quantity</label>
+          <input class="finput" id="fStock" type="number" min="0" placeholder="24" />
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:10px">
+        <div>
+          <div class="t">Flash sale</div>
+          <div class="d">Show a flash-sale tag on the storefront</div>
+        </div>
+        <button type="button" class="flash-toggle" id="fFlashToggle"></button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="productCancel">Cancel</button>
+        <button type="button" class="btn-primary" id="productSubmit" style="justify-content:center">Save product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ADD/EDIT COUPON MODAL ================= -->
+<div class="modal-overlay" id="couponOverlay">
+  <div class="modal">
+    <button class="modal-close" id="couponClose" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 id="couponModalTitle">Add coupon</h2>
+    <div class="sub">Discounts applied at checkout on the storefront.</div>
+    <div class="form-error" id="couponFormError"></div>
+    <form id="couponForm">
+      <div class="form-grid">
+        <div class="full">
+          <label class="flabel">Coupon code</label>
+          <input class="finput" id="cCode" placeholder="e.g. WELCOME10" style="text-transform:uppercase" />
+        </div>
+        <div>
+          <label class="flabel">Discount type</label>
+          <select class="finput" id="cType">
+            <option value="percent">Percent off</option>
+            <option value="flat">Flat amount off</option>
+          </select>
+        </div>
+        <div>
+          <label class="flabel" id="cValueLabel">Value (%)</label>
+          <input class="finput" id="cValue" type="number" min="0" placeholder="10" />
+        </div>
+        <div>
+          <label class="flabel">Minimum spend (₹)</label>
+          <input class="finput" id="cMin" type="number" min="0" placeholder="0" />
+        </div>
+        <div>
+          <label class="flabel">Max discount (₹, optional)</label>
+          <input class="finput" id="cMax" type="number" min="0" placeholder="150" />
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:10px">
+        <div>
+          <div class="t">Enabled</div>
+          <div class="d">Shoppers can apply this code at checkout</div>
+        </div>
+        <button type="button" class="flash-toggle on" id="cActiveToggle"></button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="couponCancel">Cancel</button>
+        <button type="button" class="btn-primary" id="couponSubmit" style="justify-content:center">Save coupon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DELETE CONFIRM MODAL (generic) ================= -->
+<div class="modal-overlay" id="deleteOverlay">
+  <div class="modal confirm-modal">
+    <div class="confirm-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    </div>
+    <h2 id="deleteTitle">Remove this item?</h2>
+    <p id="deleteBody">This takes it off the storefront immediately. This can't be undone.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="deleteCancel">Cancel</button>
+      <button type="button" class="btn-primary" id="deleteConfirm" style="background:var(--urgent-500);justify-content:center">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   API (real backend — every write here is authorized server-side
+   by requireAuth + requireAdmin; a non-admin session gets 403)
+   ============================================================ */
+// Relative path: works out of the box when this file is served from the same
+// Vercel deployment as /api (the default for this project's vercel.json).
+const API_BASE = window.SWIFTCART_API_BASE || "/api";
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* empty body */ }
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+// UI display labels <-> backend orderStatus enum. The admin screens were built around
+// the display labels below, so we translate at the API boundary rather than rewrite
+// every render function's string comparisons.
+const STATUS_TO_API = { "Placed": "placed", "Packing": "packing", "Out for delivery": "out_for_delivery", "Delivered": "delivered", "Cancelled": "cancelled" };
+const STATUS_FROM_API = { placed: "Placed", packing: "Packing", out_for_delivery: "Out for delivery", delivered: "Delivered", cancelled: "Cancelled" };
+const PAY_METHOD_FROM_API = { cod: "COD", upi: "UPI", card: "Card", wallet: "Wallet" };
+
+function mapOrderFromApi(o) {
+  return {
+    id: o._id, // Mongo ObjectId string — every place that used to do Number(o.id) has been updated
+    customer: o.user ? o.user.name : "Deleted customer",
+    customerEmail: o.user ? o.user.email : "",
+    items: o.itemCount,
+    total: o.total,
+    status: STATUS_FROM_API[o.orderStatus] || o.orderStatus,
+    payment: PAY_METHOD_FROM_API[o.paymentMethod] || o.paymentMethod,
+    paid: o.paymentStatus === "paid",
+    riderId: null, // no rider-assignment backend yet — see note in renderRiders()
+    etaMin: null,
+    placed: new Date(o.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }),
+  };
+}
+
+async function loadOrdersFromServer() {
+  const { orders } = await apiFetch("/admin/orders");
+  ORDERS = orders.map(mapOrderFromApi);
+}
+
+async function setOrderStatusOnServer(mongoId, uiStatus) {
+  const { order } = await apiFetch(`/admin/orders/${mongoId}/status`, {
+    method: "PATCH",
+    body: { orderStatus: STATUS_TO_API[uiStatus] },
+  });
+  return order;
+}
+
+async function loadCustomersFromServer() {
+  const { customers } = await apiFetch("/admin/customers");
+  CUSTOMERS = customers.map(c => ({
+    id: c._id,
+    name: c.name,
+    email: c.email,
+    phone: "—", // not collected at registration in this build
+    orders: c.orders,
+    spent: c.spent,
+    joined: new Date(c.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+  }));
+}
+
+async function loadCouponsFromServer() {
+  const { coupons } = await apiFetch("/admin/coupons");
+  COUPONS = coupons.map(c => ({ code: c.code, type: c.type, value: c.value, minSubtotal: c.minSubtotal, maxDiscount: c.maxDiscount, active: c.active }));
+}
+
+function mapProductFromApi(p) {
+  return { id: p.legacyId, _dbId: p._id, title: p.title, emoji: p.emoji, img: p.img, cat: p.cat, price: p.price, old: p.old, rating: p.rating, flash: p.flash, eta: p.eta, stock: p.stock, active: p.active };
+}
+
+async function loadProductsFromServer() {
+  const { products } = await apiFetch("/admin/products");
+  PRODUCTS = products.map(mapProductFromApi);
+  _nextProductId = PRODUCTS.reduce((max, p) => Math.max(max, p.id), 0) + 1;
+}
+
+/* ============================================================
+   DATA
+   ============================================================ */
+const CATEGORIES = ["Grocery","Electronics","Home","Fashion","Beauty"];
+const EMOJI_CHOICES = ["🎧","🥑","⌚","☕","💡","👕","🧴","⌨️","🍞","🔊","🕯️","👟","📱","🧺","🍫","🧃"];
+const ORDER_STATUSES = ["Placed","Packing","Out for delivery","Delivered","Cancelled"];
+const BOARD_STATUSES = ["Placed","Packing","Out for delivery","Delivered"];
+const NEXT_STATUS = {"Placed":"Packing","Packing":"Out for delivery","Out for delivery":"Delivered"};
+const COL_META = {
+  "Placed":     {dot:"var(--amber-500)"},
+  "Packing":    {dot:"var(--bolt-500)"},
+  "Out for delivery": {dot:"var(--bolt-900)"},
+  "Delivered":  {dot:"var(--live-500)"},
+};
+
+let PRODUCTS = []; // populated by loadProductsFromServer() after login
+let _nextProductId = 1; // recomputed by loadProductsFromServer()
+
+let ORDERS = []; // populated by loadOrdersFromServer() after login
+let currentOrderFilter = "All";
+let currentOrderSubtab = "board";
+
+// RIDERS stay local/demo data — there's no Rider model or assignment API in the backend
+// (the source prompt's spec didn't call for one). Rider assignment here does not persist.
+let RIDERS = [
+  {id:1, name:"Aman Kumar", phone:"+91 98111 22334", status:"Available"},
+  {id:2, name:"Divya Singh", phone:"+91 97222 33445", status:"On delivery"},
+  {id:3, name:"Rohit Das", phone:"+91 96333 44556", status:"Available"},
+  {id:4, name:"Farah Khan", phone:"+91 95444 55667", status:"Offline"},
+  {id:5, name:"Suresh Pillai", phone:"+91 94555 66778", status:"Available"},
+];
+
+let CUSTOMERS = []; // populated by loadCustomersFromServer() after login
+
+// Coupons now load from the real backend (see loadCouponsFromServer()) via
+// GET/POST/PATCH/DELETE /api/admin/coupons — the checkout pricing in
+// swiftcart-backend/routes/orders.js reads from the same Coupon collection.
+let COUPONS = [];
+let _editingCouponCode = null;
+let _deletingCouponCode = null;
+
+let SETTINGS = {
+  storeName: "SwiftCart",
+  supportEmail: "help@swiftcart.example",
+  deliveryFee: 40,
+  freeDeliveryThreshold: 200,
+  lowStockThreshold: 10,
+  maintenanceMode: false,
+};
+
+let currentAdmin = null;
+let authMode = "login"; // "login" only — see handleAuthSubmit(); admin accounts can't self-register
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentCategory = "All";
+let searchQuery = "";
+let sortMode = "default";
+let editingId = null;      // product id being edited, or null
+let deleteTarget = null;   // {type:"product"|"coupon", id}
+let selectedEmoji = "🎧";
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function fmtMoney(n){ return "₹" + Number(n).toLocaleString("en-IN"); }
+function stockStatus(qty){
+  if(qty <= 0) return {cls:"out", label:"Out of stock"};
+  if(qty <= SETTINGS.lowStockThreshold) return {cls:"low", label:"Low stock"};
+  return {cls:"in", label:"In stock"};
+}
+function statusClass(status){
+  return "st-" + status.toLowerCase().replace(/\s+/g,"");
+}
+function initials(name){
+  return name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
+/* ============================================================
+   VIEW SWITCHING
+   ============================================================ */
+const VIEW_META = {
+  overview:  {title:"Overview",  sub:"What needs your attention right now"},
+  products:  {title:"Products",  sub:"Manage your live catalog"},
+  orders:    {title:"Orders",    sub:"Live board and full order history"},
+  riders:    {title:"Riders",    sub:"Delivery fleet and live assignments"},
+  customers: {title:"Customers", sub:"Everyone who has shopped with you"},
+  coupons:   {title:"Coupons",   sub:"Discount codes available at checkout"},
+  settings:  {title:"Settings",  sub:"Store-wide configuration"},
+};
+function switchView(view){
+  document.querySelectorAll(".view").forEach(v=> v.classList.remove("active"));
+  document.getElementById("view-" + view).classList.add("active");
+  document.querySelectorAll(".side-link").forEach(l=> l.classList.toggle("active", l.dataset.view === view));
+  document.getElementById("pageTitle").textContent = VIEW_META[view].title;
+  document.getElementById("pageSub").textContent = VIEW_META[view].sub;
+
+  const addBtn = document.getElementById("addProductBtn");
+  const search = document.querySelector(".top-search");
+  addBtn.style.display = (view === "products") ? "flex" : "none";
+  search.style.display = (view === "products") ? "" : "none";
+
+  if(view === "overview") renderOverview();
+  if(view === "orders") renderOrders();
+  if(view === "riders") renderRiders();
+  if(view === "customers") renderCustomers();
+  if(view === "coupons") renderCoupons();
+  if(view === "settings") fillSettingsForm();
+
+  toggleSidebar(false);
+}
+
+/* ============================================================
+   PRODUCTS — CATEGORY FILTER PILLS
+   ============================================================ */
+function renderCatFilters(){
+  const wrap = document.getElementById("catFilters");
+  const all = ["All", ...CATEGORIES];
+  wrap.innerHTML = all.map(c => `<button class="cat-pill ${c===currentCategory?"active":""}" data-cat="${c}">${c}</button>`).join("");
+  wrap.querySelectorAll(".cat-pill").forEach(btn=>{
+    btn.onclick = ()=>{ currentCategory = btn.dataset.cat; renderCatFilters(); renderTable(); };
+  });
+}
+
+function getFilteredProducts(){
+  let list = PRODUCTS.slice();
+  if(currentCategory !== "All") list = list.filter(p => p.cat === currentCategory);
+  if(searchQuery.trim()){
+    const q = searchQuery.trim().toLowerCase();
+    list = list.filter(p => p.title.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q));
+  }
+  switch(sortMode){
+    case "price-asc": list.sort((a,b)=> a.price - b.price); break;
+    case "price-desc": list.sort((a,b)=> b.price - a.price); break;
+    case "stock-asc": list.sort((a,b)=> a.stock - b.stock); break;
+    case "rating-desc": list.sort((a,b)=> b.rating - a.rating); break;
+    default: list.sort((a,b)=> a.id - b.id);
+  }
+  return list;
+}
+
+function renderTable(){
+  const body = document.getElementById("productsBody");
+  const list = getFilteredProducts();
+  if(list.length === 0){
+    body.innerHTML = `<tr><td colspan="7"><div class="empty-row"><div class="e">📦</div>No products match this filter.<br>Try a different search or category.</div></td></tr>`;
+  } else {
+    body.innerHTML = list.map(p=>{
+      const st = stockStatus(p.stock);
+      return `
+      <tr data-id="${p.id}">
+        <td>
+          <div class="prod-cell">
+            <div class="prod-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${p.emoji}'}))" />` : p.emoji}</div>
+            <div>
+              <div class="prod-title">${p.title}</div>
+              <div class="prod-id">#${String(p.id).padStart(4,"0")} · ${p.eta} delivery</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="cat-tag">${p.cat}</span></td>
+        <td class="price-cell"><b>${fmtMoney(p.price)}</b>${p.old ? `<span class="price-old">${fmtMoney(p.old)}</span>` : ""}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" min="0" class="stock-input" value="${p.stock}" data-stock-id="${p.id}" />
+            <span class="stock-pill ${st.cls}"><span class="dot"></span>${st.label}</span>
+            <button class="stock-toggle-btn" data-quick-stock="${p.id}">${p.stock<=0 ? "Mark in-stock" : "Mark out"}</button>
+          </div>
+        </td>
+        <td><div class="rating-cell">★ ${p.rating.toFixed(1)}</div></td>
+        <td><button class="flash-toggle ${p.flash?"on":""}" data-flash-id="${p.id}" aria-label="Toggle flash sale"></button></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-action" data-edit-id="${p.id}" aria-label="Edit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+            <button class="icon-action danger" data-delete-id="${p.id}" aria-label="Delete">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+  bindRowEvents();
+  renderStats();
+}
+
+function bindRowEvents(){
+  document.querySelectorAll("[data-flash-id]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = Number(btn.dataset.flashId);
+      const p = PRODUCTS.find(x=>x.id===id);
+      p.flash = !p.flash;
+      toast(p.flash ? `${p.title} added to flash sale` : `${p.title} removed from flash sale`);
+      renderTable();
+    };
+  });
+  document.querySelectorAll("[data-stock-id]").forEach(inp=>{
+    inp.onchange = ()=>{
+      const id = Number(inp.dataset.stockId);
+      const p = PRODUCTS.find(x=>x.id===id);
+      const val = Math.max(0, Math.round(Number(inp.value) || 0));
+      p.stock = val;
+      toast(`Stock updated for ${p.title}`);
+      renderTable();
+    };
+  });
+  document.querySelectorAll("[data-edit-id]").forEach(btn=>{
+    btn.onclick = ()=> openProductModal(Number(btn.dataset.editId));
+  });
+  document.querySelectorAll("[data-delete-id]").forEach(btn=>{
+    btn.onclick = ()=> openDeleteModal("product", Number(btn.dataset.deleteId));
+  });
+  document.querySelectorAll("[data-quick-stock]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = Number(btn.dataset.quickStock);
+      const p = PRODUCTS.find(x=>x.id===id);
+      if(p.stock > 0){
+        p._prevStock = p.stock;
+        p.stock = 0;
+        toast(`${p.title} marked out of stock`);
+      } else {
+        p.stock = p._prevStock && p._prevStock > 0 ? p._prevStock : (SETTINGS.lowStockThreshold + 10);
+        toast(`${p.title} marked back in stock`);
+      }
+      renderTable();
+    };
+  });
+}
+
+function renderStats(){
+  const total = PRODUCTS.length;
+  const oos = PRODUCTS.filter(p=>p.stock<=0).length;
+  const flash = PRODUCTS.filter(p=>p.flash).length;
+  const value = PRODUCTS.reduce((s,p)=> s + p.price*p.stock, 0);
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statOOS").textContent = oos;
+  document.getElementById("statFlash").textContent = flash;
+  document.getElementById("statValue").textContent = fmtMoney(value);
+  document.getElementById("statOOSDelta").textContent = oos===0 ? "all products stocked" : "needs restocking";
+  document.getElementById("statFlashDelta").textContent = flash===0 ? "no active promos" : "live right now";
+
+  const low = PRODUCTS.filter(p=> p.stock > 0 && p.stock <= SETTINGS.lowStockThreshold);
+  const alertWrap = document.getElementById("lowStockAlert");
+  if(low.length === 0){
+    alertWrap.innerHTML = "";
+  } else {
+    alertWrap.innerHTML = `
+    <div class="alert-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><b>${low.length} item${low.length>1?"s":""} running low</b> (≤${SETTINGS.lowStockThreshold} units) — ${low.map(p=>p.title).join(", ")}</span>
+    </div>`;
+  }
+}
+
+/* ============================================================
+   OVERVIEW
+   ============================================================ */
+function renderOverview(){
+  const todays = ORDERS.filter(o=> o.placed.indexOf("Today") === 0);
+  const todaysRevenue = todays.filter(o=> o.status !== "Cancelled").reduce((s,o)=> s+o.total, 0);
+  const activeDeliveries = ORDERS.filter(o=> o.status === "Out for delivery").length;
+  const lowStockList = PRODUCTS.filter(p=> p.stock <= SETTINGS.lowStockThreshold).sort((a,b)=> a.stock - b.stock);
+  const needsAttention = ORDERS
+    .filter(o=> o.status === "Placed" || (o.status === "Out for delivery" && !o.riderId));
+    // already newest-first from the server
+
+  document.getElementById("ovRevenue").textContent = fmtMoney(todaysRevenue);
+  document.getElementById("ovOrders").textContent = todays.length;
+  document.getElementById("ovActiveDeliveries").textContent = activeDeliveries;
+  document.getElementById("ovLowStock").textContent = lowStockList.length;
+  document.getElementById("ovLowStockDelta").textContent = lowStockList.length === 0 ? "all products stocked" : "need restocking";
+
+  const attnWrap = document.getElementById("ovAttentionList");
+  attnWrap.innerHTML = needsAttention.length === 0
+    ? `<div class="ov-empty"><div class="e">✅</div>Nothing needs attention right now.</div>`
+    : needsAttention.slice(0,6).map(o=> `
+      <div class="ov-row">
+        <div class="avatar-chip">${initials(o.customer)}</div>
+        <div class="ov-row-main">
+          <div class="ov-row-title">${shortOrderId(o.id)} · ${o.customer}</div>
+          <div class="ov-row-sub">${o.status === "Placed" ? "Awaiting packing" : "No rider assigned"} · ${fmtMoney(o.total)}</div>
+        </div>
+        <span class="status-pill ${statusClass(o.status)}">${o.status}</span>
+      </div>`).join("");
+
+  const lsWrap = document.getElementById("ovLowStockList");
+  lsWrap.innerHTML = lowStockList.length === 0
+    ? `<div class="ov-empty"><div class="e">📦</div>All products are stocked.</div>`
+    : lowStockList.slice(0,6).map(p=>{
+      const st = stockStatus(p.stock);
+      return `
+      <div class="ov-row">
+        <div class="prod-thumb" style="width:34px;height:34px;font-size:16px">${p.img ? `<img src="${p.img}" alt="${p.title}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${p.emoji}'}))" />` : p.emoji}</div>
+        <div class="ov-row-main">
+          <div class="ov-row-title">${p.title}</div>
+          <div class="ov-row-sub">${p.cat}</div>
+        </div>
+        <span class="stock-pill ${st.cls}"><span class="dot"></span>${p.stock} left</span>
+      </div>`;
+    }).join("");
+
+  const recWrap = document.getElementById("ovRecentBody");
+  const recent = ORDERS.slice(0,5); // already newest-first from the server
+  recWrap.innerHTML = recent.map(o=> `
+    <tr>
+      <td><b>${shortOrderId(o.id)}</b></td>
+      <td>
+        <div class="prod-cell">
+          <div class="avatar-chip">${initials(o.customer)}</div>
+          <div class="prod-title">${o.customer}</div>
+        </div>
+      </td>
+      <td class="price-cell"><b>${fmtMoney(o.total)}</b></td>
+      <td><span class="status-pill ${statusClass(o.status)}">${o.status}</span></td>
+    </tr>`).join("");
+}
+
+/* ============================================================
+   PRODUCTS — ADD / EDIT MODAL
+   ============================================================ */
+function fillCatSelect(){
+  const sel = document.getElementById("fCat");
+  sel.innerHTML = CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join("");
+}
+function fillEmojiRow(){
+  const row = document.getElementById("emojiRow");
+  row.innerHTML = EMOJI_CHOICES.map(e=>`<button type="button" class="emoji-choice ${e===selectedEmoji?"active":""}" data-emoji="${e}">${e}</button>`).join("");
+  row.querySelectorAll(".emoji-choice").forEach(btn=>{
+    btn.onclick = ()=>{
+      selectedEmoji = btn.dataset.emoji;
+      document.getElementById("fEmoji").value = selectedEmoji;
+      row.querySelectorAll(".emoji-choice").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+    };
+  });
+}
+function openProductModal(id){
+  editingId = id || null;
+  document.getElementById("productFormError").classList.remove("show");
+  fillCatSelect();
+
+  if(editingId){
+    const p = PRODUCTS.find(x=>x.id===editingId);
+    document.getElementById("productModalTitle").textContent = "Edit product";
+    document.getElementById("productModalSub").textContent = `Editing #${String(p.id).padStart(4,"0")} — changes apply immediately.`;
+    document.getElementById("fTitle").value = p.title;
+    document.getElementById("fEmoji").value = p.emoji;
+    selectedEmoji = p.emoji;
+    document.getElementById("fCat").value = p.cat;
+    document.getElementById("fEta").value = p.eta;
+    document.getElementById("fPrice").value = p.price;
+    document.getElementById("fOld").value = p.old || "";
+    document.getElementById("fRating").value = p.rating;
+    document.getElementById("fStock").value = p.stock;
+    document.getElementById("fFlashToggle").classList.toggle("on", !!p.flash);
+    document.getElementById("productSubmit").textContent = "Save changes";
+  } else {
+    document.getElementById("productModalTitle").textContent = "Add product";
+    document.getElementById("productModalSub").textContent = "Fill in the details below to add it to the catalog.";
+    document.getElementById("fTitle").value = "";
+    document.getElementById("fEmoji").value = "🎧";
+    selectedEmoji = "🎧";
+    document.getElementById("fCat").value = CATEGORIES[0];
+    document.getElementById("fEta").value = "";
+    document.getElementById("fPrice").value = "";
+    document.getElementById("fOld").value = "";
+    document.getElementById("fRating").value = "";
+    document.getElementById("fStock").value = "";
+    document.getElementById("fFlashToggle").classList.remove("on");
+    document.getElementById("productSubmit").textContent = "Save product";
+  }
+  fillEmojiRow();
+  document.getElementById("productOverlay").classList.add("show");
+}
+function closeProductModal(){
+  document.getElementById("productOverlay").classList.remove("show");
+  editingId = null;
+}
+async function handleProductSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  const errEl = document.getElementById("productFormError");
+  errEl.classList.remove("show");
+
+  const title = document.getElementById("fTitle").value.trim();
+  const emoji = document.getElementById("fEmoji").value.trim() || "📦";
+  const cat = document.getElementById("fCat").value;
+  const eta = document.getElementById("fEta").value.trim() || "15 min";
+  const price = Math.round(Number(document.getElementById("fPrice").value));
+  const oldRaw = document.getElementById("fOld").value;
+  const old = oldRaw ? Math.round(Number(oldRaw)) : null;
+  const rating = Number(document.getElementById("fRating").value) || 4.5;
+  const stock = Math.max(0, Math.round(Number(document.getElementById("fStock").value) || 0));
+  const flash = document.getElementById("fFlashToggle").classList.contains("on");
+
+  if(!title){ errEl.textContent = "Please give the product a title."; errEl.classList.add("show"); return; }
+  if(!price || price <= 0){ errEl.textContent = "Please enter a valid price."; errEl.classList.add("show"); return; }
+  if(old !== null && old <= price){ errEl.textContent = "Old price should be higher than the current price."; errEl.classList.add("show"); return; }
+
+  const submitBtn = document.getElementById("productSubmit");
+  submitBtn.disabled = true;
+  try {
+    if(editingId){
+      const p = PRODUCTS.find(x=>x.id===editingId);
+      const { product } = await apiFetch(`/admin/products/${p._dbId}`, {
+        method: "PATCH",
+        body: { title, emoji, cat, eta, price, old, rating, stock, flash },
+      });
+      Object.assign(p, mapProductFromApi(product));
+      toast(`${title} updated`);
+    } else {
+      const legacyId = _nextProductId++;
+      const { product } = await apiFetch("/admin/products", {
+        method: "POST",
+        body: { legacyId, title, emoji, cat, eta, price, old, rating, stock, flash },
+      });
+      PRODUCTS.push(mapProductFromApi(product));
+      toast(`${title} added to catalog`);
+    }
+    closeProductModal();
+    renderCatFilters();
+    renderTable();
+  } catch (err) {
+    errEl.textContent = err.message || "Couldn't save this product. Please try again.";
+    errEl.classList.add("show");
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+/* ============================================================
+   ORDERS
+   ============================================================ */
+function riderName(id){
+  const r = RIDERS.find(x=>x.id===id);
+  return r ? r.name : null;
+}
+function computeAvgEta(){
+  const done = ORDERS.filter(o=>o.status==="Delivered" && o.etaMin);
+  if(done.length===0) return "12 min";
+  const avg = Math.round(done.reduce((s,o)=>s+o.etaMin,0)/done.length);
+  return avg + " min";
+}
+function renderOrderStats(){
+  const live = ORDERS.filter(o=> o.status!=="Delivered" && o.status!=="Cancelled").length;
+  const outForDelivery = ORDERS.filter(o=> o.status==="Out for delivery").length;
+  const codDue = ORDERS.filter(o=> o.payment==="COD" && !o.paid && o.status!=="Cancelled").reduce((s,o)=>s+o.total,0);
+  document.getElementById("statLiveOrders").textContent = live;
+  document.getElementById("statOutForDelivery").textContent = outForDelivery;
+  document.getElementById("statAvgEta").textContent = computeAvgEta();
+  document.getElementById("statCodDue").textContent = fmtMoney(codDue);
+}
+function payBadge(o){
+  return o.paid
+    ? `<span class="pay-badge paid">✓ Paid · ${o.payment}</span>`
+    : `<span class="pay-badge due">₹ Due · COD</span>`;
+}
+function shortOrderId(id){ return "#" + String(id).slice(-8).toUpperCase(); }
+
+function renderKanban(){
+  const board = document.getElementById("kanbanBoard");
+  board.innerHTML = BOARD_STATUSES.map(status=>{
+    const items = ORDERS.filter(o=>o.status===status); // already newest-first from the server
+    const meta = COL_META[status];
+    const cards = items.length ? items.map(o=>{
+      const canAdvance = !!NEXT_STATUS[status];
+      return `
+      <div class="kcard" data-order-id="${o.id}">
+        <div class="kcard-top">
+          <span class="kcard-id">${shortOrderId(o.id)}</span>
+          ${payBadge(o)}
+        </div>
+        <div class="kcard-cust">
+          <div class="avatar-chip" style="width:26px;height:26px;font-size:11px">${initials(o.customer)}</div>
+          <div class="name">${o.customer}</div>
+        </div>
+        <div class="kcard-meta">
+          <span>${o.items} item${o.items>1?"s":""} · ${fmtMoney(o.total)}</span>
+          <span>${o.placed}</span>
+        </div>
+        <div class="kcard-rider">
+          <select data-assign-rider="${o.id}">
+            <option value="">Unassigned</option>
+            ${RIDERS.map(r=>`<option value="${r.id}" ${o.riderId===r.id?"selected":""}>${r.name} ${r.status==="Available"?"· Available":r.status==="On delivery"?"· Busy":"· Offline"}</option>`).join("")}
+          </select>
+        </div>
+        <div class="kcard-actions">
+          ${canAdvance ? `<button class="kcard-advance" data-advance="${o.id}">Mark as ${NEXT_STATUS[status]}</button>` : `<button class="kcard-advance" style="background:var(--live-500)" disabled>Delivered</button>`}
+          <button class="kcard-cancel" data-cancel="${o.id}" aria-label="Cancel order" title="Cancel order">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join("") : `<div class="kcol-empty">No orders here</div>`;
+
+    return `
+    <div class="kcol">
+      <div class="kcol-head">
+        <span class="kcol-dot" style="background:${meta.dot}"></span>
+        <span class="kcol-title">${status}</span>
+        <span class="kcol-count">${items.length}</span>
+      </div>
+      <div class="kcol-body">${cards}</div>
+    </div>`;
+  }).join("");
+
+  board.querySelectorAll("[data-advance]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.advance;
+      const o = ORDERS.find(x=>x.id===id);
+      const next = NEXT_STATUS[o.status];
+      if(!next) return;
+      if(next === "Out for delivery" && !o.riderId){
+        toast("Assign a rider before sending it out for delivery");
+        return;
+      }
+      btn.disabled = true;
+      try {
+        await setOrderStatusOnServer(id, next);
+        o.status = next;
+        if(next === "Delivered" && !o.etaMin) o.etaMin = 9 + Math.floor(Math.random()*14);
+        toast(`Order ${shortOrderId(o.id)} marked as ${next}`);
+      } catch (err) {
+        toast(err.message || "Couldn't update the order.");
+      }
+      renderOrders();
+      renderRiders();
+    };
+  });
+  board.querySelectorAll("[data-cancel]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.cancel;
+      const o = ORDERS.find(x=>x.id===id);
+      btn.disabled = true;
+      try {
+        await setOrderStatusOnServer(id, "Cancelled");
+        o.status = "Cancelled";
+        toast(`Order ${shortOrderId(o.id)} cancelled`);
+      } catch (err) {
+        toast(err.message || "Couldn't cancel the order.");
+      }
+      renderOrders();
+      renderRiders();
+    };
+  });
+  board.querySelectorAll("[data-assign-rider]").forEach(sel=>{
+    sel.onchange = ()=>{
+      // Local only — no rider-assignment endpoint on the backend (see RIDERS comment above).
+      const id = sel.dataset.assignRider;
+      const o = ORDERS.find(x=>x.id===id);
+      o.riderId = sel.value ? Number(sel.value) : null;
+      const r = RIDERS.find(x=>x.id===o.riderId);
+      toast(r ? `${r.name} assigned to order ${shortOrderId(o.id)} (local only)` : `Rider unassigned from order ${shortOrderId(o.id)}`);
+      renderRiders();
+    };
+  });
+}
+function renderOrderFilters(){
+  const wrap = document.getElementById("orderFilters");
+  const all = ["All", ...ORDER_STATUSES];
+  wrap.innerHTML = all.map(s => `<button class="cat-pill ${s===currentOrderFilter?"active":""}" data-status="${s}">${s}</button>`).join("");
+  wrap.querySelectorAll(".cat-pill").forEach(btn=>{
+    btn.onclick = ()=>{ currentOrderFilter = btn.dataset.status; renderOrderFilters(); renderOrdersTable(); };
+  });
+}
+function renderOrdersTable(){
+  const body = document.getElementById("ordersBody");
+  let list = ORDERS.slice(); // already newest-first from the server
+  if(currentOrderFilter !== "All") list = list.filter(o => o.status === currentOrderFilter);
+
+  if(list.length === 0){
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-row"><div class="e">🧾</div>No orders with this status.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(o => `
+    <tr data-order-id="${o.id}">
+      <td><b>${shortOrderId(o.id)}</b></td>
+      <td>
+        <div class="prod-cell">
+          <div class="avatar-chip">${initials(o.customer)}</div>
+          <div class="prod-title">${o.customer}</div>
+        </div>
+      </td>
+      <td>${o.items} item${o.items>1?"s":""}</td>
+      <td class="price-cell"><b>${fmtMoney(o.total)}</b></td>
+      <td>${payBadge(o)}</td>
+      <td style="color:var(--ink-soft)">${riderName(o.riderId) || "—"}</td>
+      <td style="color:var(--ink-soft)">${o.placed}</td>
+      <td>
+        <select class="status-select" data-order-status="${o.id}">
+          ${ORDER_STATUSES.map(s => `<option value="${s}" ${s===o.status?"selected":""}>${s}</option>`).join("")}
+        </select>
+      </td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll("[data-order-status]").forEach(sel=>{
+    sel.onchange = async ()=>{
+      const id = sel.dataset.orderStatus;
+      const o = ORDERS.find(x=>x.id===id);
+      const newStatus = sel.value;
+      sel.disabled = true;
+      try {
+        await setOrderStatusOnServer(id, newStatus);
+        o.status = newStatus;
+        toast(`Order ${shortOrderId(o.id)} marked as ${newStatus}`);
+      } catch (err) {
+        sel.value = o.status; // revert the dropdown on failure
+        toast(err.message || "Couldn't update the order.");
+      }
+      sel.disabled = false;
+      renderOrdersTable();
+      renderOrderStats();
+      renderRiders();
+    };
+  });
+}
+function switchOrderSubtab(tab){
+  currentOrderSubtab = tab;
+  document.querySelectorAll("#orderSubtabs .subtab").forEach(b=> b.classList.toggle("active", b.dataset.subtab===tab));
+  document.getElementById("orderBoardWrap").style.display = tab==="board" ? "" : "none";
+  document.getElementById("orderTableWrap").style.display = tab==="table" ? "" : "none";
+  document.getElementById("orderFilters").style.display = tab==="table" ? "flex" : "none";
+}
+function renderOrders(){
+  renderOrderStats();
+  renderKanban();
+  renderOrderFilters();
+  renderOrdersTable();
+}
+
+/* ============================================================
+   RIDERS
+   ============================================================ */
+function renderRiders(){
+  const avail = RIDERS.filter(r=>r.status==="Available").length;
+  const onDel = RIDERS.filter(r=>r.status==="On delivery").length;
+  document.getElementById("statRidersAvail").textContent = avail;
+  document.getElementById("statRidersOnDelivery").textContent = onDel;
+  document.getElementById("statRidersTotal").textContent = RIDERS.length;
+  document.getElementById("statAvgEta2").textContent = computeAvgEta();
+
+  const grid = document.getElementById("riderGrid");
+  grid.innerHTML = RIDERS.map(r=>{
+    const load = ORDERS.filter(o=> o.riderId===r.id && o.status!=="Delivered" && o.status!=="Cancelled").length;
+    return `
+    <div class="rider-card">
+      <div class="rider-top">
+        <div class="avatar-chip" style="width:38px;height:38px;font-size:14px">${initials(r.name)}</div>
+        <div>
+          <div class="rider-name">${r.name}</div>
+          <div class="rider-phone">${r.phone}</div>
+        </div>
+      </div>
+      <select class="rstatus-select" data-rider-status="${r.id}">
+        <option value="Available" ${r.status==="Available"?"selected":""}>Available</option>
+        <option value="On delivery" ${r.status==="On delivery"?"selected":""}>On delivery</option>
+        <option value="Offline" ${r.status==="Offline"?"selected":""}>Offline</option>
+      </select>
+      <div class="rider-stats">
+        <div class="rider-load">Active orders: <b>${load}</b></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  grid.querySelectorAll("[data-rider-status]").forEach(sel=>{
+    sel.onchange = ()=>{
+      const id = Number(sel.dataset.riderStatus);
+      const r = RIDERS.find(x=>x.id===id);
+      r.status = sel.value;
+      toast(`${r.name} marked as ${r.status}`);
+      renderRiders();
+      renderKanban();
+    };
+  });
+}
+
+/* ============================================================
+   CUSTOMERS
+   ============================================================ */
+function renderCustomers(){
+  const body = document.getElementById("customersBody");
+  const list = CUSTOMERS.slice().sort((a,b)=> b.spent - a.spent);
+  body.innerHTML = list.map(c => `
+    <tr>
+      <td>
+        <div class="prod-cell">
+          <div class="avatar-chip">${initials(c.name)}</div>
+          <div class="prod-title">${c.name}</div>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:13px">${c.email}</div>
+        <div style="font-size:11.5px;color:var(--ink-soft)">${c.phone}</div>
+      </td>
+      <td>${c.orders}</td>
+      <td class="price-cell"><b>${fmtMoney(c.spent)}</b></td>
+      <td style="color:var(--ink-soft)">${c.joined}</td>
+    </tr>
+  `).join("");
+}
+
+/* ============================================================
+   COUPONS
+   ============================================================ */
+function renderCoupons(){
+  const body = document.getElementById("couponsBody");
+  if(COUPONS.length === 0){
+    body.innerHTML = `<tr><td colspan="5"><div class="empty-row"><div class="e">🏷️</div>No coupons yet. Add one to offer a discount at checkout.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = COUPONS.map(c => {
+    const discountLabel = c.type === "percent"
+      ? `${c.value}% off${c.maxDiscount ? ` (max ${fmtMoney(c.maxDiscount)})` : ""}`
+      : `${fmtMoney(c.value)} off`;
+    return `
+    <tr data-coupon="${c.code}">
+      <td><span class="coupon-code-cell">${c.code}</span></td>
+      <td>${discountLabel}</td>
+      <td>${c.minSubtotal > 0 ? fmtMoney(c.minSubtotal) : "None"}</td>
+      <td><button class="active-toggle ${c.active?"on":""}" data-coupon-active="${c.code}" aria-label="Toggle enabled"></button></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-action" data-coupon-edit="${c.code}" aria-label="Edit">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+          <button class="icon-action danger" data-coupon-delete="${c.code}" aria-label="Delete">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll("[data-coupon-active]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const c = COUPONS.find(x=>x.code===btn.dataset.couponActive);
+      btn.disabled = true;
+      try {
+        const { coupon } = await apiFetch(`/admin/coupons/${c.code}`, { method: "PATCH", body: { active: !c.active } });
+        c.active = coupon.active;
+        toast(`${c.code} ${c.active ? "enabled" : "disabled"}`);
+      } catch (err) {
+        toast(err.message || "Couldn't update coupon.");
+      }
+      btn.disabled = false;
+      renderCoupons();
+    };
+  });
+  document.querySelectorAll("[data-coupon-edit]").forEach(btn=>{
+    btn.onclick = ()=> openCouponModal(btn.dataset.couponEdit);
+  });
+  document.querySelectorAll("[data-coupon-delete]").forEach(btn=>{
+    btn.onclick = ()=> openDeleteModal("coupon", btn.dataset.couponDelete);
+  });
+}
+
+function updateCouponValueLabel(){
+  const type = document.getElementById("cType").value;
+  document.getElementById("cValueLabel").textContent = type === "percent" ? "Value (%)" : "Value (₹)";
+}
+function openCouponModal(code){
+  _editingCouponCode = code || null;
+  document.getElementById("couponFormError").classList.remove("show");
+
+  if(_editingCouponCode){
+    const c = COUPONS.find(x=>x.code===_editingCouponCode);
+    document.getElementById("couponModalTitle").textContent = "Edit coupon";
+    document.getElementById("cCode").value = c.code;
+    document.getElementById("cCode").disabled = true;
+    document.getElementById("cType").value = c.type;
+    document.getElementById("cValue").value = c.value;
+    document.getElementById("cMin").value = c.minSubtotal || "";
+    document.getElementById("cMax").value = c.maxDiscount || "";
+    document.getElementById("cActiveToggle").classList.toggle("on", c.active);
+    document.getElementById("couponSubmit").textContent = "Save changes";
+  } else {
+    document.getElementById("couponModalTitle").textContent = "Add coupon";
+    document.getElementById("cCode").value = "";
+    document.getElementById("cCode").disabled = false;
+    document.getElementById("cType").value = "percent";
+    document.getElementById("cValue").value = "";
+    document.getElementById("cMin").value = "";
+    document.getElementById("cMax").value = "";
+    document.getElementById("cActiveToggle").classList.add("on");
+    document.getElementById("couponSubmit").textContent = "Save coupon";
+  }
+  updateCouponValueLabel();
+  document.getElementById("couponOverlay").classList.add("show");
+}
+function closeCouponModal(){
+  document.getElementById("couponOverlay").classList.remove("show");
+  document.getElementById("cCode").disabled = false;
+  _editingCouponCode = null;
+}
+async function handleCouponSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  const errEl = document.getElementById("couponFormError");
+  errEl.classList.remove("show");
+
+  const code = document.getElementById("cCode").value.trim().toUpperCase();
+  const type = document.getElementById("cType").value;
+  const value = Number(document.getElementById("cValue").value);
+  const minSubtotal = Math.max(0, Math.round(Number(document.getElementById("cMin").value) || 0));
+  const maxRaw = document.getElementById("cMax").value;
+  const maxDiscount = maxRaw ? Math.round(Number(maxRaw)) : null;
+  const active = document.getElementById("cActiveToggle").classList.contains("on");
+
+  if(!code){ errEl.textContent = "Please enter a coupon code."; errEl.classList.add("show"); return; }
+  if(!_editingCouponCode && COUPONS.some(c=>c.code===code)){ errEl.textContent = "A coupon with this code already exists."; errEl.classList.add("show"); return; }
+  if(!value || value <= 0){ errEl.textContent = "Please enter a valid discount value."; errEl.classList.add("show"); return; }
+  if(type === "percent" && value > 100){ errEl.textContent = "Percent discount can't exceed 100."; errEl.classList.add("show"); return; }
+
+  const submitBtn = document.getElementById("couponSubmit");
+  submitBtn.disabled = true;
+  try {
+    if(_editingCouponCode){
+      const { coupon } = await apiFetch(`/admin/coupons/${_editingCouponCode}`, {
+        method: "PATCH",
+        body: { type, value, minSubtotal, maxDiscount, active },
+      });
+      const c = COUPONS.find(x=>x.code===_editingCouponCode);
+      Object.assign(c, coupon);
+      toast(`${c.code} updated`);
+    } else {
+      const { coupon } = await apiFetch("/admin/coupons", {
+        method: "POST",
+        body: { code, type, value, minSubtotal, maxDiscount, active },
+      });
+      COUPONS.push(coupon);
+      toast(`${code} added`);
+    }
+    closeCouponModal();
+    renderCoupons();
+  } catch (err) {
+    errEl.textContent = err.message || "Couldn't save this coupon. Please try again.";
+    errEl.classList.add("show");
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function fillSettingsForm(){
+  document.getElementById("setStoreName").value = SETTINGS.storeName;
+  document.getElementById("setEmail").value = SETTINGS.supportEmail;
+  document.getElementById("setDeliveryFee").value = SETTINGS.deliveryFee;
+  document.getElementById("setFreeThreshold").value = SETTINGS.freeDeliveryThreshold;
+  document.getElementById("setLowStock").value = SETTINGS.lowStockThreshold;
+  document.getElementById("setMaintenanceToggle").classList.toggle("on", SETTINGS.maintenanceMode);
+}
+function handleSaveSettings(){
+  SETTINGS.storeName = document.getElementById("setStoreName").value.trim() || SETTINGS.storeName;
+  SETTINGS.supportEmail = document.getElementById("setEmail").value.trim() || SETTINGS.supportEmail;
+  SETTINGS.deliveryFee = Math.max(0, Math.round(Number(document.getElementById("setDeliveryFee").value) || 0));
+  SETTINGS.freeDeliveryThreshold = Math.max(0, Math.round(Number(document.getElementById("setFreeThreshold").value) || 0));
+  SETTINGS.lowStockThreshold = Math.max(0, Math.round(Number(document.getElementById("setLowStock").value) || 0));
+  SETTINGS.maintenanceMode = document.getElementById("setMaintenanceToggle").classList.contains("on");
+  toast("Settings saved");
+  renderTable(); // low-stock threshold change affects product stock pills
+}
+
+/* ============================================================
+   DELETE MODAL (shared by products + coupons)
+   ============================================================ */
+function openDeleteModal(type, id){
+  deleteTarget = {type, id};
+  let title, body;
+  if(type === "product"){
+    const p = PRODUCTS.find(x=>x.id===id);
+    title = `Remove "${p.title}"?`;
+    body = "This takes it off the storefront immediately. This can't be undone.";
+  } else {
+    title = `Remove coupon ${id}?`;
+    body = "Shoppers will no longer be able to apply this code at checkout.";
+  }
+  document.getElementById("deleteTitle").textContent = title;
+  document.getElementById("deleteBody").textContent = body;
+  document.getElementById("deleteOverlay").classList.add("show");
+}
+function closeDeleteModal(){
+  document.getElementById("deleteOverlay").classList.remove("show");
+  deleteTarget = null;
+}
+async function confirmDelete(){
+  if(!deleteTarget) return;
+  const confirmBtn = document.getElementById("deleteConfirm");
+  confirmBtn.disabled = true;
+  try {
+    if(deleteTarget.type === "product"){
+      const p = PRODUCTS.find(x=>x.id===deleteTarget.id);
+      await apiFetch(`/admin/products/${p._dbId}`, { method: "DELETE" });
+      PRODUCTS = PRODUCTS.filter(x=>x.id!==deleteTarget.id);
+      toast(`${p.title} removed from catalog`);
+      renderTable();
+    } else {
+      await apiFetch(`/admin/coupons/${deleteTarget.id}`, { method: "DELETE" });
+      COUPONS = COUPONS.filter(x=>x.code!==deleteTarget.id);
+      toast(`Coupon ${deleteTarget.id} removed`);
+      renderCoupons();
+    }
+    closeDeleteModal();
+  } catch (err) {
+    toast(err.message || "Couldn't remove this item.");
+  } finally {
+    confirmBtn.disabled = false;
+  }
+}
+
+/* ============================================================
+   AUTH — real backend session, admin role required.
+   Self-registration is intentionally NOT wired here: creating an admin account
+   must never be reachable from a public form. Use the seed script
+   (swiftcart-backend/utils/seedProducts.js, via SEED_ADMIN_EMAIL/PASSWORD)
+   or create additional admins directly in the database.
+   ============================================================ */
+function setAuthMode(mode){
+  authMode = "login"; // signup tab is disabled — see comment above
+  document.getElementById("tabLogin").classList.add("active");
+  document.getElementById("tabSignup").classList.remove("active");
+  document.getElementById("nameFieldWrap").style.display = "none";
+  document.getElementById("confirmFieldWrap").style.display = "none";
+  document.getElementById("authSub").textContent = "Sign in to manage your store";
+  document.getElementById("authSubmit").textContent = "Sign in";
+  document.getElementById("authError").classList.remove("show");
+}
+async function handleAuthSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  const errEl = document.getElementById("authError");
+  errEl.classList.remove("show");
+
+  const email = document.getElementById("authEmail").value.trim().toLowerCase();
+  const password = document.getElementById("authPassword").value;
+  if(!email || !password){ errEl.textContent = "Please fill in email and password."; errEl.classList.add("show"); return; }
+
+  const submitBtn = document.getElementById("authSubmit");
+  submitBtn.disabled = true;
+  try {
+    const { user } = await apiFetch("/auth/login", { method: "POST", body: { email, password } });
+    if (user.role !== "admin") {
+      // Authentication succeeded but authorization didn't — a real customer account.
+      // Log the session back out immediately rather than leaving a non-admin signed in here.
+      await apiFetch("/auth/logout", { method: "POST" }).catch(()=>{});
+      errEl.textContent = "This account doesn't have store-admin access.";
+      errEl.classList.add("show");
+      return;
+    }
+    await logInAs(user);
+    toast(`Welcome back, ${user.name}!`);
+  } catch (err) {
+    errEl.textContent = err.status === 429
+      ? "Too many attempts. Please wait a bit and try again."
+      : (err.message || "Incorrect email or password.");
+    errEl.classList.add("show");
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+async function logInAs(user){
+  currentAdmin = user;
+  document.getElementById("sideName").textContent = user.name;
+  document.getElementById("sideRole").textContent = "Store manager";
+  document.getElementById("sideAvatar").textContent = initials(user.name).slice(0,2) || "A";
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("appRoot").style.display = "";
+  document.getElementById("authForm").reset();
+
+  // Pull real data before rendering the first screen.
+  try {
+    await Promise.all([loadProductsFromServer(), loadOrdersFromServer(), loadCustomersFromServer(), loadCouponsFromServer()]);
+  } catch (err) {
+    toast("Some data couldn't be loaded from the server.");
+  }
+  renderCatFilters();
+  renderTable();
+  switchView("overview");
+}
+async function signOut(){
+  try { await apiFetch("/auth/logout", { method: "POST" }); } catch (e) {}
+  currentAdmin = null;
+  document.getElementById("appRoot").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  setAuthMode("login");
+  toggleSidebar(false);
+}
+
+/** Restores an existing admin session on page load/refresh via the session cookie. */
+async function restoreAdminSession(){
+  try {
+    const { user } = await apiFetch("/auth/me");
+    if (user.role === "admin") { await logInAs(user); return; }
+    await apiFetch("/auth/logout", { method: "POST" }).catch(()=>{});
+  } catch (e) { /* no valid session — show the login screen */ }
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("appRoot").style.display = "none";
+}
+
+document.getElementById("tabLogin").onclick = ()=> setAuthMode("login");
+document.getElementById("tabSignup").onclick = ()=> toast("Ask an existing store admin to create your account — self-signup is disabled for admin access.");
+document.getElementById("authForm").onsubmit = handleAuthSubmit;
+document.getElementById("authSubmit").onclick = handleAuthSubmit;
+["authName","authEmail","authPassword","authConfirm"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener("keydown", (e)=>{ if(e.key === "Enter") handleAuthSubmit(e); });
+});
+document.getElementById("signOutBtn").onclick = signOut;
+
+
+/* ============================================================
+   SIDEBAR (mobile) + NAV
+   ============================================================ */
+function toggleSidebar(force){
+  const sb = document.getElementById("sidebar");
+  const scrim = document.getElementById("sidebarScrim");
+  const open = force !== undefined ? force : !sb.classList.contains("open");
+  sb.classList.toggle("open", open);
+  scrim.classList.toggle("show", open);
+}
+document.getElementById("menuToggle").onclick = ()=> toggleSidebar();
+document.getElementById("sidebarScrim").onclick = ()=> toggleSidebar(false);
+document.querySelectorAll(".side-nav .side-link").forEach(link=>{
+  link.onclick = ()=> { switchView(link.dataset.view); toggleSidebar(false); };
+});
+document.querySelectorAll("[data-goto]").forEach(btn=>{
+  btn.onclick = ()=> switchView(btn.dataset.goto);
+});
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.getElementById("addProductBtn").onclick = ()=> openProductModal(null);
+document.getElementById("productClose").onclick = closeProductModal;
+document.getElementById("productCancel").onclick = closeProductModal;
+document.getElementById("productOverlay").onclick = (e)=>{ if(e.target.id==="productOverlay") closeProductModal(); };
+document.getElementById("productForm").onsubmit = handleProductSubmit;
+document.getElementById("productSubmit").onclick = handleProductSubmit;
+document.getElementById("fFlashToggle").onclick = ()=> document.getElementById("fFlashToggle").classList.toggle("on");
+document.getElementById("fEmoji").addEventListener("input", (e)=>{ selectedEmoji = e.target.value; fillEmojiRow(); });
+
+document.getElementById("addCouponBtn").onclick = ()=> openCouponModal(null);
+document.getElementById("couponClose").onclick = closeCouponModal;
+document.getElementById("couponCancel").onclick = closeCouponModal;
+document.getElementById("couponOverlay").onclick = (e)=>{ if(e.target.id==="couponOverlay") closeCouponModal(); };
+document.getElementById("couponForm").onsubmit = handleCouponSubmit;
+document.getElementById("couponSubmit").onclick = handleCouponSubmit;
+document.getElementById("cType").addEventListener("change", updateCouponValueLabel);
+document.getElementById("cActiveToggle").onclick = ()=> document.getElementById("cActiveToggle").classList.toggle("on");
+
+document.getElementById("deleteCancel").onclick = closeDeleteModal;
+document.getElementById("deleteOverlay").onclick = (e)=>{ if(e.target.id==="deleteOverlay") closeDeleteModal(); };
+document.getElementById("deleteConfirm").onclick = confirmDelete;
+
+document.getElementById("saveSettingsBtn").onclick = handleSaveSettings;
+document.getElementById("setMaintenanceToggle").onclick = ()=> document.getElementById("setMaintenanceToggle").classList.toggle("on");
+
+document.getElementById("searchInput").addEventListener("input", (e)=>{ searchQuery = e.target.value; renderTable(); });
+document.querySelectorAll("#orderSubtabs .subtab").forEach(btn=>{
+  btn.onclick = ()=> switchOrderSubtab(btn.dataset.subtab);
+});
+document.getElementById("sortSelect").addEventListener("change", (e)=>{ sortMode = e.target.value; renderTable(); });
+
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){ closeProductModal(); closeCouponModal(); closeDeleteModal(); }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+restoreAdminSession(); // GET /api/auth/me — restores an existing admin session via cookie
+</script>
+</body>
+</html>
