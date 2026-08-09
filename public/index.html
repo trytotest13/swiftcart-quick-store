@@ -1185,7 +1185,8 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
-      transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease)
+      transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+      z-index: 2
     }
 
     .wish-btn:hover {
@@ -3540,9 +3541,8 @@
       </div>
       <form id="walletAddForm">
         <div class="field">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1v22" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <text x="12" y="18" text-anchor="middle" font-size="19" font-weight="700" font-family="Arial, sans-serif">₹</text>
           </svg>
           <input id="upiAmount" type="number" min="1" placeholder="Enter amount" inputmode="numeric" />
         </div>
@@ -3854,11 +3854,7 @@
     /* ============ API (real backend — auth/orders/payments are never sourced from localStorage) ============ */
     // Point this at your backend. Same origin in production; a full URL during local dev
     // if the frontend is served from a different port (see swiftcart-backend/.env.example).
-    // Relative path: works out of the box when this file is served from the same
-    // Vercel deployment as /api (the default for this project's vercel.json).
-    // Override window.SWIFTCART_API_BASE before this script runs if you're serving
-    // the frontend from somewhere else than the API.
-    const API_BASE = window.SWIFTCART_API_BASE || "/api";
+    const API_BASE = window.SWIFTCART_API_BASE || "http://localhost:4000/api";
 
     async function apiFetch(path, options = {}) {
       const res = await fetch(`${API_BASE}${path}`, {
@@ -4994,7 +4990,14 @@
       const i = _wishlist.indexOf(id);
       if (i === -1) { _wishlist.push(id); toast("Added to wishlist ❤️"); }
       else { _wishlist.splice(i, 1); toast("Removed from wishlist"); }
-      renderGrid();
+      // Update just this product's heart button(s) in place instead of re-rendering
+      // the whole grid — avoids the flicker/"page reload" look on every click.
+      const isActive = _wishlist.includes(id);
+      document.querySelectorAll(`.wish-btn[data-id="${id}"]`).forEach(btn => {
+        btn.classList.toggle("active", isActive);
+        const svg = btn.querySelector("svg");
+        if (svg) svg.setAttribute("fill", isActive ? "currentColor" : "none");
+      });
       if (document.getElementById("wishlistOverlay").classList.contains("show")) renderWishlist();
     }
 
