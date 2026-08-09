@@ -1,0 +1,1 @@
+# swiftcart-quick-store
