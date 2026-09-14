@@ -1,4 +1,4 @@
-# SwiftCart — Vercel deployment
+# SwiftCart - Vercel deployment
 
 This is the same real-auth / real-order / Razorpay-test-mode SwiftCart backend from
 `DELIVERY_NOTES.md`, restructured for a one-repo Vercel deployment:
